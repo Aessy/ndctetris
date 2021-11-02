@@ -4,12 +4,14 @@
 Game createGame(uint32_t height, uint32_t width)
 {
     std::vector<Point> row(width);
-    Game game{{}, boost::none, 0, height, width};
+    Game game{{}, 0, height, width};
 
     for (int i = 0; i < height; ++i)
     {
         game.grid.push_back(row);
     }
+
+    return game;
 }
 
 static Tetromino clear(Tetromino t)
@@ -23,6 +25,61 @@ static Tetromino clear(Tetromino t)
     }
 
     return t;
+}
+
+template<typename Pred>
+static bool forEachBlockInPiece(Tetromino const& tetromino, Pred pred)
+{
+    for (int y = 0; y < tetromino.size(); ++y)
+    {
+        for (int x = 0; x < tetromino[y].size(); ++x)
+        {
+            if (tetromino[y][x])
+            {
+                if (pred(vec2<int>(x, y)))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool collidingWithStructures(Player const& player, Grid const& grid)
+{
+    auto pred = [&](vec2<int> pos)
+    {
+        pos += player.position;
+
+        if (pos.y > grid.size())
+        {
+            return true;
+        }
+        if (grid.at(pos.y).at(pos.x).occ)
+        {
+            return true;
+        }
+
+        return false;
+    };
+
+    return forEachBlockInPiece(player.tetromino, pred);
+}
+
+bool collidingWithWalls(Tetromino const& tetromino, Grid const& grid)
+{
+    return false;
+}
+
+bool blitTetrominoToGrid(Player const& player, Grid& grid)
+{
+    forEachBlockInPiece(player.tetromino, [&grid](vec2<int> pos){
+                pos += player.position;
+                grid.at(pos.y).at(pos.x).occ = true;
+                return false;
+            });
 }
 
 Tetromino createTetromino(Piece piece_type)

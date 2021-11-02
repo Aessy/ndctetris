@@ -6,12 +6,15 @@
 
 #include <boost/optional.hpp>
 
+#include "linalg.h"
+
 struct Point
 {
     bool occ {false};
 };
 
 using Tetromino = std::vector<std::vector<bool>>;
+using Grid = std::vector<std::vector<Point>>;
 
 enum class Piece
 {
@@ -26,7 +29,7 @@ enum class Piece
 
 struct Player
 {
-    boost::optional<Tetromino> active_tetromino;
+    Tetromino tetromino;
     vec2<int> position{0,0};
 };
 
