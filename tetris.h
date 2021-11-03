@@ -16,6 +16,13 @@ struct Point
 using Tetromino = std::vector<std::vector<bool>>;
 using Grid = std::vector<std::vector<Point>>;
 
+enum class TetrisColor
+{
+    GREEN,
+    BLACK,
+    PINK
+};
+
 enum class Piece
 {
       i_block
@@ -27,9 +34,16 @@ enum class Piece
     , z_block
 };
 
+struct TetrominoPiece
+{
+    Tetromino grid;
+    TetrisColor color;
+    vec2<int> size;
+};
+
 struct Player
 {
-    Tetromino tetromino;
+    TetrominoPiece tetromino;
     vec2<int> position{0,0};
 };
 
@@ -43,21 +57,33 @@ struct Game
     uint32_t width{};
 };
 
-Game createGame(uint32_t height, uint32_t width);
-
-Tetromino createTetromino(Piece piece_type);
-Tetromino rotateTetromino(Tetromino tetromino);
-
-inline std::ostream & operator <<(std::ostream & os, Tetromino const& t)
+template<typename Pred>
+static bool forEachBlockInPiece(Tetromino const& tetromino, Pred pred)
 {
-    for (auto row : t)
+    for (int y = 0; y < tetromino.size(); ++y)
     {
-        for (auto col : row)
+        for (int x = 0; x < tetromino[y].size(); ++x)
         {
-            os << col << " ";
+            if (tetromino[y][x])
+            {
+                if (pred(vec2<int>(x, y)))
+                {
+                    return true;
+                }
+            }
         }
-        os << "\n";
     }
 
-    return os;
+    return false;
 }
+
+
+
+Game createGame(uint32_t width, uint32_t height);
+TetrominoPiece createTetromino(Piece piece_type);
+Tetromino rotateTetromino(Tetromino tetromino);
+
+void tickGame(Game& game, Player& player);
+Player newPlayer(int width);
+
+std::ostream & operator <<(std::ostream & os, Tetromino const& t);
