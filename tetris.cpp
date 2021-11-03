@@ -193,6 +193,29 @@ void tickGame(Game& game, Player& player, float elapsed)
             --player.position.y;
             blitTetrominoToGrid(player, game.grid);
             player = newPlayer(game.width);
+
+            // Check if we should remove rows
+
+            for (int y = 0; y < game.grid.size(); ++y)
+            {
+                if (std::all_of(game.grid[y].begin(), game.grid[y].end(), [](auto s) {return s.occ;}))
+                {
+                    std::cout << "Row complete\n";
+                    for (int x = 0; x < game.grid[y].size(); ++x)
+                    {
+                        game.grid[y][x].occ = false;
+                    }
+
+                    if (y > 0)
+                    {
+                        // Move all rows above this row one step down.
+                        for (int i = y-1; i > 0; --i)
+                        {
+                            game.grid[i+1] = game.grid[i];
+                        }
+                    }
+                }
+            }
         }
     }
 
