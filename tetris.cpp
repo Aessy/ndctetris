@@ -48,9 +48,12 @@ bool collidingWithStructures(Player const& player, Grid const& grid)
     return forEachBlockInPiece(player.tetromino.grid, pred);
 }
 
-bool collidingWithWalls(Player const& player, Grid const& grid)
+bool collidingWithWalls(Player const& player, Game const& game)
 {
-    return false;
+    return forEachBlockInPiece(player.tetromino.grid, [&](auto pos) {
+            pos += player.position;
+            return (pos.x >= game.width) || (pos.x < 0);
+            });
 }
 
 void blitTetrominoToGrid(Player const& player, Grid& grid)
@@ -143,6 +146,27 @@ Tetromino rotateTetromino(Tetromino tetromino)
     return new_piece;
 }
 
+void rotatePlayer(Player& player, Game const& game)
+{
+
+    auto rotated = rotateTetromino(player.tetromino.grid);
+    TetrominoPiece new_piece = player.tetromino;
+    new_piece.grid = rotated;
+
+    auto maybe_new_player = Player { new_piece, player.position };
+
+    if (collidingWithWalls(maybe_new_player, game))
+    {
+        return;
+    }
+    if (collidingWithStructures(maybe_new_player, game.grid))
+    {
+        return;
+    }
+
+    player = maybe_new_player;
+}
+
 Player newPlayer(int width)
 { 
     int piece = std::rand()/((RAND_MAX + 1u)/7);
@@ -154,17 +178,33 @@ Player newPlayer(int width)
     return player;
 }
 
-void tickGame(Game& game, Player& player)
+void tickGame(Game& game, Player& player, float elapsed)
 {
-    ++game.ticks;
-
-    ++player.position.y;
-    if (collidingWithStructures(player, game.grid))
+    game.elapsed += elapsed;
+    if (game.elapsed > game.last_tick + 0.2f)
     {
-        std::cout << "Colliding\n";
-        --player.position.y;
-        blitTetrominoToGrid(player, game.grid);
-        player = newPlayer(game.width);
+        game.last_tick = game.elapsed;
+
+        ++game.ticks;
+        ++player.position.y;
+        if (collidingWithStructures(player, game.grid))
+        {
+            std::cout << "Colliding\n";
+            --player.position.y;
+            blitTetrominoToGrid(player, game.grid);
+            player = newPlayer(game.width);
+        }
+    }
+
+}
+
+void movePlayer(int dir, Player& player, Game const& game)
+{
+    player.position.x += dir;
+    if (   collidingWithWalls(player, game)
+        || collidingWithStructures(player, game.grid))
+    {
+        player.position.x -= dir;
     }
 }
 

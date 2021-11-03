@@ -16,6 +16,7 @@ int main()
     auto game = createGame(10, 20);
     Player player = newPlayer(game.width);
 
+    auto start = std::chrono::system_clock::now();
     while (window.isOpen())
     {
         sf::Event event;
@@ -25,7 +26,27 @@ int main()
             {
                 window.close();
             }
+            if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::Left)
+                {
+                    movePlayer(-1, player, game);
+                }
+                else if (event.key.code == sf::Keyboard::Right)
+                {
+                    movePlayer(1, player, game);
+                }
+                else if (event.key.code == sf::Keyboard::Space)
+                {
+                    rotatePlayer(player, game);
+                }
+            }
         }
+
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<float> elapsed_seconds = end-start;
+        start = end;
+        tickGame(game, player, elapsed_seconds.count());
 
         window.clear(sf::Color::White);
 
@@ -62,9 +83,7 @@ int main()
                 });
 
         window.display();
-
-        std::this_thread::sleep_for (std::chrono::milliseconds(100));
-        tickGame(game, player);
+        std::this_thread::sleep_for (std::chrono::milliseconds(2));
     }
 
     /*

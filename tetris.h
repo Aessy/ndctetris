@@ -55,6 +55,9 @@ struct Game
 
     uint32_t hight{};
     uint32_t width{};
+
+    float elapsed {};
+    float last_tick {};
 };
 
 template<typename Pred>
@@ -82,8 +85,10 @@ static bool forEachBlockInPiece(Tetromino const& tetromino, Pred pred)
 Game createGame(uint32_t width, uint32_t height);
 TetrominoPiece createTetromino(Piece piece_type);
 Tetromino rotateTetromino(Tetromino tetromino);
+void movePlayer(int dir, Player& player, Game const& game);
+void rotatePlayer(Player& player, Game const& game);
 
-void tickGame(Game& game, Player& player);
+void tickGame(Game& game, Player& player, float elapsed);
 Player newPlayer(int width);
 
 std::ostream & operator <<(std::ostream & os, Tetromino const& t);
