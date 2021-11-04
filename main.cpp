@@ -36,6 +36,10 @@ int main()
                 {
                     movePlayer(1, player, game);
                 }
+                else if (event.key.code == sf::Keyboard::Down)
+                {
+                    game.fast_drop = true;
+                }
                 else if (event.key.code == sf::Keyboard::Space)
                 {
                     rotatePlayer(player, game);

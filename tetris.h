@@ -56,6 +56,9 @@ struct Game
     uint32_t hight{};
     uint32_t width{};
 
+    float current_speed {0.8f};
+    bool fast_drop {false};
+
     float elapsed {};
     float last_tick {};
 };

@@ -178,10 +178,37 @@ Player newPlayer(int width)
     return player;
 }
 
+static void performRowProcessing(Game& game)
+{
+    // Check if we should remove rows
+    for (int y = 0; y < game.grid.size(); ++y)
+    {
+        if (std::all_of(game.grid[y].begin(), game.grid[y].end(), [](auto s) {return s.occ;}))
+        {
+            std::cout << "Row complete\n";
+            for (int x = 0; x < game.grid[y].size(); ++x)
+            {
+                game.grid[y][x].occ = false;
+            }
+
+            if (y > 0)
+            {
+                // Move all rows above this row one step down.
+                for (int i = y-1; i > 0; --i)
+                {
+                    game.grid[i+1] = game.grid[i];
+                }
+            }
+        }
+    }
+}
+
 void tickGame(Game& game, Player& player, float elapsed)
 {
     game.elapsed += elapsed;
-    if (game.elapsed > game.last_tick + 0.2f)
+    auto speed = game.fast_drop ? 0.05f : game.current_speed;
+
+    if (game.elapsed > game.last_tick + speed)
     {
         game.last_tick = game.elapsed;
 
@@ -189,33 +216,15 @@ void tickGame(Game& game, Player& player, float elapsed)
         ++player.position.y;
         if (collidingWithStructures(player, game.grid))
         {
-            std::cout << "Colliding\n";
+            // If colliding after increasing y, move back and blit the piece to the main grid.
             --player.position.y;
             blitTetrominoToGrid(player, game.grid);
             player = newPlayer(game.width);
+            game.fast_drop = false;
 
-            // Check if we should remove rows
+            // Remove and move rows
+            performRowProcessing(game);
 
-            for (int y = 0; y < game.grid.size(); ++y)
-            {
-                if (std::all_of(game.grid[y].begin(), game.grid[y].end(), [](auto s) {return s.occ;}))
-                {
-                    std::cout << "Row complete\n";
-                    for (int x = 0; x < game.grid[y].size(); ++x)
-                    {
-                        game.grid[y][x].occ = false;
-                    }
-
-                    if (y > 0)
-                    {
-                        // Move all rows above this row one step down.
-                        for (int i = y-1; i > 0; --i)
-                        {
-                            game.grid[i+1] = game.grid[i];
-                        }
-                    }
-                }
-            }
         }
     }
 
