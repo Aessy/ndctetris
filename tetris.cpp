@@ -3,8 +3,9 @@
 
 Game createGame(uint32_t width, uint32_t height)
 {
+    std::vector<Level> levels{{1, 0.8f}, {2, 0.7f}, {3, 0.6f}, {4, 0.5f}, {5, 0.3f}};
     std::vector<Point> row(width);
-    Game game{{}, 0, height, width};
+    Game game{{}, 0, height, width, levels};
 
     for (int i = 0; i < height; ++i)
     {
@@ -170,7 +171,6 @@ void rotatePlayer(Player& player, Game const& game)
 Player newPlayer(int width)
 { 
     int piece = std::rand()/((RAND_MAX + 1u)/7);
-    std::cout << piece << '\n';
     Player player{ createTetromino(static_cast<Piece>(piece)), vec2<int>(0,0) };
     int spawn_x = (width/2) - (player.tetromino.size.x/2);
     player.position.x = spawn_x;
@@ -178,14 +178,16 @@ Player newPlayer(int width)
     return player;
 }
 
-static void performRowProcessing(Game& game)
+static uint32_t performRowProcessing(Game& game)
 {
+    uint32_t rows_removed {};
     // Check if we should remove rows
     for (int y = 0; y < game.grid.size(); ++y)
     {
         if (std::all_of(game.grid[y].begin(), game.grid[y].end(), [](auto s) {return s.occ;}))
         {
             std::cout << "Row complete\n";
+            ++rows_removed;
             for (int x = 0; x < game.grid[y].size(); ++x)
             {
                 game.grid[y][x].occ = false;
@@ -201,12 +203,24 @@ static void performRowProcessing(Game& game)
             }
         }
     }
+
+    return rows_removed;
 }
 
 void tickGame(Game& game, Player& player, float elapsed)
 {
     game.elapsed += elapsed;
-    auto speed = game.fast_drop ? 0.05f : game.current_speed;
+
+    if (game.cleared_since_last_level_inc >= 2)
+    {
+        if (game.level < game.levels.size()-1)
+        {
+            ++game.level;
+            game.cleared_since_last_level_inc = 0;
+        }
+    }
+
+    auto speed = game.fast_drop ? 0.05f : game.levels[game.level].speed;
 
     if (game.elapsed > game.last_tick + speed)
     {
@@ -223,8 +237,7 @@ void tickGame(Game& game, Player& player, float elapsed)
             game.fast_drop = false;
 
             // Remove and move rows
-            performRowProcessing(game);
-
+            game.cleared_since_last_level_inc += performRowProcessing(game);
         }
     }
 

@@ -47,6 +47,12 @@ struct Player
     vec2<int> position{0,0};
 };
 
+struct Level
+{
+    int level {};
+    float speed {};
+};
+
 struct Game
 {
     std::vector<std::vector<Point>> grid{};
@@ -56,11 +62,17 @@ struct Game
     uint32_t hight{};
     uint32_t width{};
 
+    std::vector<Level> levels {};
+
     float current_speed {0.8f};
     bool fast_drop {false};
 
     float elapsed {};
     float last_tick {};
+
+    uint32_t score {};
+    uint32_t level {};
+    uint32_t cleared_since_last_level_inc{};
 };
 
 template<typename Pred>
